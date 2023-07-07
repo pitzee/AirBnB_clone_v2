@@ -3,22 +3,18 @@
   from the contents of the web_static folder (fabric script) """
 
 
-from fabric.api import local
+from fabric.api import *
 from datetime import datetime
 
 
 def do_pack():
-    """Generates a .tgz archive from the contents of the web_static folder"""
-    # Create the versions folder if it doesn't exist
-    local("mkdir -p versions")
-    # Get the current date and time in the format yyyymmddhhmmss
-    now = datetime.now().strftime("%Y%m%d%H%M%S")
-    # Create the archive name using the web_static prefix and the date and time
-    archive_name = "web_static_{}.tgz".format(now)
-    # Use the local command to create the archive with tar
-    result = local("tar -cvzf versions/{} web_static".format(archive_name))
-    # If the command was successful, return the archive path, otherwise return None
+    """ Fabric script that generates a .tgz archive from the contents of the...
+    ...web_static folder """
+    local("sudo mkdir -p versions")
+    date = datetime.now().strftime("%Y%m%d%H%M%S")
+    archive_path = "versions/web_static_{}.tgz".format(date)
+    result = local("sudo tar -cvzf {} web_static".format(archive_path))
     if result.succeeded:
-        return "versions/{}".format(archive_name)
+        return archive_path
     else:
         return None
