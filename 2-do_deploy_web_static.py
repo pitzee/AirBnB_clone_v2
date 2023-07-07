@@ -11,8 +11,8 @@ import os
 env.hosts = ['3.83.238.226', '34.202.234.56']
 env.user = 'ubuntu'
 
-
-
+"""generates a .tgz archive from the contents of the web_static folder
+    """
 def do_pack():
     """generates a .tgz archive from the contents of the web_static folder
     """
@@ -23,7 +23,7 @@ def do_pack():
     if result.succeeded:
         return filename
     else:
-
+        """ return none if not succed """
         return None
 
 def do_deploy(archive_path):
