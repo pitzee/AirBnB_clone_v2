@@ -3,54 +3,59 @@
 Distributes an archive to my web servers,
 using the function deploy
 """
-from fabric.api import env, local, put, run
+from fabric.api import *
 from datetime import datetime
-from os.path import exists
+import os
 
 env.hosts = ['3.83.238.226', '34.202.234.56']
+env.user = 'ubuntu'
+
+
+def deploy():
+    ''' Deploys archive '''
+    archive_path = do_pack()
+    if not archive_path:
+        return False
+    return do_deploy(archive_path)
+
 
 def do_pack():
-    """Generates a .tgz archive from the contents of the web_static folder"""
-    # Create the versions folder if it doesn't exist
-    local("mkdir -p versions")
-    # Get the current date and time in the format yyyymmddhhmmss
-    now = datetime.now().strftime("%Y%m%d%H%M%S")
-    # Create the archive name using the web_static prefix and the date and time
-    archive_name = "web_static_{}.tgz".format(now)
-    # Use the local command to create the archive with tar
-    result = local("tar -cvzf versions/{} web_static".format(archive_name))
-    # If the command was successful, return the archive path, otherwise return None
-    if result.succeeded:
-        return "versions/{}".format(archive_name)
-    else:
+    '''
+    Generates a tgz archive from the
+    contents of the web_static folder
+    '''
+    try:
+        local('sudo mkdir -p versions')
+        datetime_format = '%Y%m%d%H%M%S'
+        archive_path = 'versions/web_static_{}.tgz'.format(
+            datetime.now().strftime(datetime_format))
+        local('sudo tar -cvzf {} web_static'.format(archive_path))
+        print('web_static packed: {} -> {}'.format(archive_path,
+              os.path.getsize(archive_path)))
+        return archive_path
+    except:
         return None
 
 
 def do_deploy(archive_path):
-    """Distributes an archive to the web servers"""
-    # Check if the archive path exists
-    if not exists(archive_path):
+    '''
+    Deploy archive to web server
+    '''
+    if not os.path.exists(archive_path):
         return False
-    # Get the archive filename without the path (ex: web_static_20211020190000.tgz)
-    archive_file = archive_path.split("/")[-1]
-    # Get the archive filename without the extension (ex: web_static_20211020190000)
-    archive_folder = archive_file.split(".")[0]
-    # Upload the archive to the /tmp/ directory of the web server
-    put(archive_path, "/tmp/")
-    # Uncompress the archive to the folder /data/web_static/releases/<archive filename without extension> on the web server
-    run("mkdir -p /data/web_static/releases/{}".format(archive_folder))
-    run("tar -xzf /tmp/{} -C /data/web_static/releases/{}".format(archive_file, archive_folder))
-    # Delete the archive from the web server
-    run("rm /tmp/{}".format(archive_file))
-    # Delete the symbolic link /data/web_static/current from the web server
-    run("rm -rf /data/web_static/current")
-    # Create a new the symbolic link /data/web_static/current on the web server, linked to the new version of your code
-    run("ln -s /data/web_static/releases/{} /data/web_static/current".format(archive_folder))
-    # Return True if all operations have been done correctly, otherwise return False
-    return True
-
-
-def deploy():
-    """Creates and distributes an archive to the web servers"""
-    # Call the do_pack() function and store the path of the created archive
-    archive_path = do_pack()
+    file_name = archive_path.split('/')[1]
+    file_path = '/data/web_static/releases/'
+    releases_path = file_path + file_name[:-4]
+    try:
+        put(archive_path, '/tmp/')
+        run('sudo mkdir -p {}'.format(releases_path))
+        run('sudo tar -xzf /tmp/{} -C {}'.format(file_name, releases_path))
+        run('sudo rm /tmp/{}'.format(file_name))
+        run('sudo mv {}/web_static/* {}/'.format(releases_path, releases_path))
+        run('sudo rm -rf {}/web_static'.format(releases_path))
+        run('sudo rm -rf /data/web_static/current')
+        run('sudo ln -s {} /data/web_static/current'.format(releases_path))
+        print('New version deployed!')
+        return True
+    except:
+        return False
