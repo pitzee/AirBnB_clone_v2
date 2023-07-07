@@ -11,12 +11,9 @@ import os
 env.hosts = ['3.83.238.226', '34.202.234.56']
 env.user = 'ubuntu'
 
-"""generates a .tgz archive from the contents of the web_static folder
-    """
+
 def do_pack():
-    """generates a .tgz archive from the contents of the web_static folderi
-
-
+    """generates a .tgz archive from the contents of the web_static folder
     """
     local("sudo mkdir -p versions")
     date = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -28,9 +25,9 @@ def do_pack():
         """ return none if not succed """
         return None
 
+
 def do_deploy(archive_path):
     '''
-
     Deploy archive to web server
     '''
     if not os.path.exists(archive_path):
