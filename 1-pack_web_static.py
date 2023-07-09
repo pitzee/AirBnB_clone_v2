@@ -5,6 +5,7 @@
 
 from fabric.api import *
 from datetime import datetime
+import os
 
 
 def do_pack():
@@ -15,6 +16,8 @@ def do_pack():
     archive_path = "versions/web_static_{}.tgz".format(date)
     result = local("sudo tar -cvzf {} web_static".format(archive_path))
     if result.succeeded:
+        size = os.stat(archive_path).st_size
+        print("web_static packed: {} -> {}Bytes".format(archive_path, size))
         return archive_path
     else:
         return None
